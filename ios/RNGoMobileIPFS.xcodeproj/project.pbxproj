@@ -38,7 +38,7 @@
 		18F609F72BEB3E6C0008B11E /* OrbitDbMessageCallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F609F52BEB3E6C0008B11E /* OrbitDbMessageCallback.swift */; };
 		7699B88040F8A987B510C191 /* libPods-RNGoMobileIPFS-RNGoMobileIPFSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-RNGoMobileIPFS-RNGoMobileIPFSTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		9E735E702BECAAAF0078F60A /* Core.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E735E6F2BECAAAF0078F60A /* Core.xcframework */; };
+		9E5035FC2C0435DA00D3519F /* Core.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E735E6F2BECAAAF0078F60A /* Core.xcframework */; };
 		BA0834EE744FF5FA43793866 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 43BE7D64966F83A43DB015FB /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
@@ -103,7 +103,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9E735E702BECAAAF0078F60A /* Core.xcframework in Frameworks */,
+				9E5035FC2C0435DA00D3519F /* Core.xcframework in Frameworks */,
 				18F609B32BEB0FB80008B11E /* CoreBluetooth.framework in Frameworks */,
 				0C80B921A6F3F58F76C31292 /* libPods-RNGoMobileIPFS.a in Frameworks */,
 			);
@@ -563,7 +563,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 5BRLH95UCS;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = RNGoMobileIPFS/Info.plist;
@@ -571,13 +571,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.oolio.orbitdbpoc;
 				PRODUCT_NAME = RNGoMobileIPFS;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -595,20 +595,20 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 5BRLH95UCS;
 				INFOPLIST_FILE = RNGoMobileIPFS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.oolio.orbitdbpoc;
 				PRODUCT_NAME = RNGoMobileIPFS;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -693,10 +693,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -769,10 +766,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

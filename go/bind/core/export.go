@@ -7,10 +7,13 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"berty.tech/go-orbit-db/iface"
 	"berty.tech/go-orbit-db/stores/replicator"
 	ipfs_node "github.com/ipfs-shipyard/gomobile-ipfs/go/pkg/ipfsmobile"
+	"github.com/libp2p/go-libp2p/core/event"
+	"github.com/libp2p/go-libp2p/core/network"
 )
 
 type OrbitDb struct {
@@ -22,11 +25,56 @@ type OrbitDb struct {
 func NewOrbitDB() *OrbitDb {
 	var odb = OrbitDb{}
 	odb.db = ipfs_node.GetOrbitDb()
+	odb.SubscribeToPeerEvents() // Subscribe to peer events
 	return &odb
 }
 
 type MessageCallback interface {
 	OnMessage(string)
+}
+
+func (ob *OrbitDb) ManualSync() error {
+	ctx := context.Background()
+	oplog := ob.db.OpLog()
+	heads := oplog.Heads().Slice()
+	log.Println("Starting manual sync with heads:", heads)
+
+	if len(heads) == 0 {
+		log.Println("No heads to sync")
+		return nil
+	}
+
+	err := ob.db.Sync(ctx, heads)
+	if err != nil {
+		return fmt.Errorf("manual sync failed: %w", err)
+	}
+
+	log.Println("Manual sync completed")
+	return nil
+}
+
+func (ob *OrbitDb) SubscribeToPeerEvents() {
+	peerSub, err := ob.db.Replicator().EventBus().Subscribe(new(event.EvtPeerConnectednessChanged))
+	if err != nil {
+		log.Println("Error subscribing to peer events:", err)
+		return
+	}
+	go func() {
+		for {
+			select {
+			case evt := <-peerSub.Out():
+				switch e := evt.(type) {
+				case event.EvtPeerConnectednessChanged:
+					if e.Connectedness == network.Connected {
+						log.Println("New peer connected:", e.Peer)
+						if err := ob.ManualSync(); err != nil {
+							log.Println("Error during manual sync:", err)
+						}
+					}
+				}
+			}
+		}
+	}()
 }
 
 func (ob *OrbitDb) StartSubscription(callback MessageCallback) {
@@ -39,8 +87,28 @@ func (ob *OrbitDb) StartSubscription(callback MessageCallback) {
 			log.Println("Error subscribing to replicator event:", err)
 			return
 		}
+		defer repSub.Close()
+
 		stop := false
 		repChan := repSub.Out()
+
+		// Goroutine to perform periodic manual sync
+		go func() {
+			ticker := time.NewTicker(30 * time.Second) // Adjust the interval as needed
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					log.Println("Performing periodic manual sync")
+					if err := ob.ManualSync(); err != nil {
+						log.Println("Error during manual sync:", err)
+					}
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+
 		for {
 			log.Println("Replication status:", ob.db.ReplicationStatus().GetProgress(), "/", ob.db.ReplicationStatus().GetMax())
 			if ob.db.ReplicationStatus().GetProgress() == ob.db.ReplicationStatus().GetMax() && !stop {
@@ -64,6 +132,11 @@ func (ob *OrbitDb) StartSubscription(callback MessageCallback) {
 					continue
 				}
 
+				if e.Entry.Payload == "" {
+					log.Println("Received event with empty payload:", e)
+					continue
+				}
+
 				payloadBytes, err := base64.StdEncoding.DecodeString(e.Entry.Payload)
 				if err != nil {
 					fmt.Println("Error decoding payload:", err)
@@ -71,6 +144,8 @@ func (ob *OrbitDb) StartSubscription(callback MessageCallback) {
 				}
 
 				payload := string(payloadBytes)
+
+				log.Println("Received something:", e.Entry, e.Address, payload)
 
 				var pt PayloadType
 
@@ -89,15 +164,18 @@ func (ob *OrbitDb) StartSubscription(callback MessageCallback) {
 				ob.eventsMutex.Lock()
 				ob.events = append(ob.events, string(decodedValue))
 				ob.eventsMutex.Unlock()
+
 				callback.OnMessage(string(decodedValue))
 				log.Println("Received event:", e.Entry, pt, e.Address, string(decodedValue))
 			case e := <-repChan:
 				log.Println("Received from channel repChan:", e)
-
+				// Optionally trigger a sync based on replication events if needed
+				if err := ob.ManualSync(); err != nil {
+					log.Println("Error during manual sync:", err)
+				}
 			case <-ctx.Done():
 				return
 			}
-
 		}
 	}()
 }
