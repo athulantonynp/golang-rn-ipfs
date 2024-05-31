@@ -31,6 +31,7 @@ function App() {
   const [modalVisible, setModalVisible] = useState(false);
   const [peers, setPeers] = useState([]);
   const [peerId, setPeerId] = useState('');
+  const [cachedEvents, setCachedEvents] = useState({});
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -84,16 +85,38 @@ function App() {
   const handleReceivedData = data => {
     const message = Buffer.from(data.message, 'hex').toString();
     const orderData = JSON.parse(message);
-    console.log('Received order data:', orderData);
 
     setOrders(prevOrders => {
       const prevOrder = prevOrders[orderData.orderId];
+
+      if (
+        !prevOrder &&
+        !orderData.events.some(e => e.action === 'ORDER_INITIATE')
+      ) {
+        setCachedEvents(prevEvents => {
+          return {
+            ...prevEvents,
+            [orderData.orderId]: orderData.events,
+          };
+        });
+        return prevOrders;
+      }
+
       const newOrder = computeOrderState(
         orderData.events,
         prevOrder || undefined,
       );
       console.log('Previous order:', prevOrder);
       console.log('New order:', newOrder);
+
+      if (cachedEvents[orderData.orderId]) {
+        const finalOrder = computeOrderState(
+          cachedEvents[orderData.orderId],
+          newOrder,
+        );
+        delete cachedEvents[orderData.orderId];
+        return {...prevOrders, [orderData.orderId]: finalOrder};
+      }
 
       return {...prevOrders, [orderData.orderId]: newOrder};
     });
